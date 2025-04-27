@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
 
 // 连接到数据库
-const db = new sqlite3.Database('./db/duduu.db', (err) => {
+const db = new sqlite3.Database(path.join(__dirname, 'db/duduu.db'), (err) => {
   if (err) {
     console.error('数据库连接错误:', err.message);
   } else {
