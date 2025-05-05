@@ -600,16 +600,27 @@
             cursor: pointer;
             display: flex;
             align-items: center;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
+            margin-right: 8px;
+        }
+        
+        .modal-action-btn i {
+            margin-right: 5px;
         }
         
         .modal-action-btn:hover {
             background-color: #444;
         }
         
-        .modal-action-btn i {
-            margin-right: 5px;
+        #copyPromptBtn:hover {
+            background-color: #2196F3;
         }
+        
+        #resetPromptBtn:hover {
+            background-color: #FF5722;
+        }
+        
+        /* 移除重置动效样式 */
         
         .modal-prompt {
             margin-bottom: 20px;
@@ -682,6 +693,91 @@
             font-size: 12px;
         }
         
+        /* 生成同款相关样式 */
+        .modal-generate {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .generate-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .generate-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .generated-image-container {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #222;
+        }
+        
+        .generated-image-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        
+        .generated-image-wrapper img {
+            width: 100%;
+            display: block;
+            border-radius: 4px;
+        }
+        
+        .download-image-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .download-image-btn:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        
+        .loading-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            background-color: #222;
+            border-radius: 4px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         /* 登录/注册按钮样式 */
         .login-btn {
             display: flex;
@@ -691,7 +787,188 @@
             border: none;
             border-radius: 20px;
             padding: 6px 15px;
-            font-size: 14px;
+            font-size: 14cd /Users/tulooo/Documents/GitHub/Duduu/backend
+            // 前端 Coze 客户端代码
+            // 注意：所有敏感信息如API密钥均已移至后端处理
+            // 前端只通过安全的API端点与后端通信
+                
+                // 返回工作流状态
+                res.json({
+                  success: true,
+                  status: response.data.status,
+                  outputs: response.data.outputs
+                });
+                
+              } catch (error) {
+                console.error('检查工作流状态错误:', error.response?.data || error.message);
+                res.status(500).json({ 
+                  error: '检查工作流状态失败', 
+                  details: error.response?.data?.message || error.message 
+                });
+              }
+            });// coze-client.js
+            class CozeClient {
+              // 调用 Coze 工作流
+              static async runWorkflow(workflowId, inputs) {
+                try {
+                  const response = await fetch('/api/coze/workflow', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ workflowId, inputs })
+                  });
+                  
+                  const data = await response.json();
+                  
+                  if (!response.ok) {
+                    throw new Error(data.error || '工作流调用失败');
+                  }
+                  
+                  return data;
+                } catch (error) {
+                  console.error('运行工作流错误:', error);
+                  throw error;
+                }
+              }
+              
+              // 检查工作流状态
+              static async checkWorkflowStatus(runId) {
+                try {
+                  const response = await fetch(`/api/coze/workflow/status?runId=${runId}`);
+                  
+                  const data = await response.json();
+                  
+                  if (!response.ok) {
+                    throw new Error(data.error || '检查工作流状态失败');
+                  }
+                  
+                  return data;
+                } catch (error) {
+                  console.error('检查工作流状态错误:', error);
+                  throw error;
+                }
+              }
+              
+              // 轮询工作流状态直到完成
+              static async pollWorkflowUntilComplete(runId, interval = 2000, maxAttempts = 30) {
+                return new Promise(async (resolve, reject) => {
+                  let attempts = 0;
+                  
+                  const checkStatus = async () => {
+                    try {
+                      const statusData = await this.checkWorkflowStatus(runId);
+                      
+                      if (statusData.status === 'COMPLETED') {
+                        resolve(statusData);
+                        return;
+                      }
+                      
+                      if (statusData.status === 'FAILED') {
+                        reject(new Error('工作流执行失败'));
+                        return;
+                      }
+                      
+                      attempts++;
+                      
+                      if (attempts >= maxAttempts) {
+                        reject(new Error('工作流执行超时'));
+                        return;
+                      }
+                      
+                      // 继续轮询
+                      setTimeout(checkStatus, interval);
+                    } catch (error) {
+                      reject(error);
+                    }
+                  };
+                  
+                  // 开始轮询
+                  checkStatus();
+                });
+              }
+            }
+            
+            // 导出 CozeClient
+            window.CozeClient = CozeClient;// 修改 index.html 中的生成同款按钮代码
+            generateSimilarBtn.addEventListener('click', async function() {
+                // 显示生成容器，并添加加载指示器
+                generatedImageContainer.style.display = 'block';
+                generatedImageContainer.innerHTML = `
+                    <div class="loading-indicator">
+                        <div class="loading-spinner"></div>
+                    </div>
+                `;
+                
+                // 获取当前提示词
+                const prompt = promptText.value;
+                
+                try {
+                    // 调用 Coze 工作流生成图片
+                    // 替换为您的实际工作流 ID
+                    const COZE_IMAGE_WORKFLOW_ID = 'YOUR_WORKFLOW_ID';
+                    
+                    // 运行工作流
+                    const workflowResult = await CozeClient.runWorkflow(COZE_IMAGE_WORKFLOW_ID, {
+                        prompt: prompt
+                    });
+                    
+                    // 如果工作流是异步的，需要轮询状态
+                    if (workflowResult.runId && !workflowResult.outputs) {
+                        const finalResult = await CozeClient.pollWorkflowUntilComplete(workflowResult.runId);
+                        
+                        // 获取图片 URL
+                        const imageUrl = finalResult.outputs.image_url || finalResult.outputs.image;
+                        
+                        // 显示生成的图片
+                        displayGeneratedImage(imageUrl);
+                    } else {
+                        // 工作流是同步的，直接使用结果
+                        const imageUrl = workflowResult.outputs.image_url || workflowResult.outputs.image;
+                        
+                        // 显示生成的图片
+                        displayGeneratedImage(imageUrl);
+                    }
+                } catch (error) {
+                    console.error('生成图片失败:', error);
+                    generatedImageContainer.innerHTML = `
+                        <div class="error-message" style="color: red; padding: 20px; text-align: center;">
+                            生成图片失败: ${error.message}
+                        </div>
+                    `;
+                }
+                
+                // 显示生成的图片的辅助函数
+                function displayGeneratedImage(imageUrl) {
+                    if (!imageUrl) {
+                        throw new Error('未能获取生成的图片 URL');
+                    }
+                    
+                    generatedImageContainer.innerHTML = `
+                        <div class="generated-image-wrapper">
+                            <img src="${imageUrl}" alt="生成的图片" id="generatedImage">
+                            <button class="download-image-btn" id="downloadImageBtn">点击下载图片</button>
+                        </div>
+                    `;
+                    
+                    // 绑定下载按钮事件
+                    document.getElementById('downloadImageBtn').addEventListener('click', function() {
+                        const link = document.createElement('a');
+                        link.href = imageUrl;
+                        link.download = '生成图片_' + new Date().getTime() + '.jpg';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    });
+                }
+            });<!-- 在 body 结束标签前添加 -->
+            <script src="coze-client.js"></script>
+            <script src="auth.js"></script>
+            <script>
+                // 您现有的 JavaScript 代码
+            </script>
+            </body>cd /Users/tulooo/Documents/GitHub/Duduu/backend
+            npm install axios --savepx;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -1058,10 +1335,7 @@
         </div>
     </div>
     
-    <!-- 底部按钮 -->
-    <div class="bottom-action" id="contactBtn">
-        <i class="ri-customer-service-2-line"></i>
-    </div>
+    <!-- Coze智能体已集成到页面中 -->
     
     <!-- 登录/注册弹窗 -->
     <div id="loginModal" class="login-modal">
@@ -1119,7 +1393,6 @@
             </div>
         </div>
     </div>
-    
     <!-- 联系浮层 -->
     <div class="contact-tooltip" id="contactTooltip">
         <div class="contact-tooltip-content">
@@ -1144,6 +1417,10 @@
                                 <i class="ri-file-copy-line"></i>
                                 <span>复制</span>
                             </button>
+                            <button class="modal-action-btn" id="resetPromptBtn">
+                                <i class="ri-refresh-line"></i>
+                                <span>重置</span>
+                            </button>
                         </div>
                     </div>
                     <div class="modal-prompt">
@@ -1153,7 +1430,6 @@
                     <div class="modal-author">
                         <div class="author-info">
                             <div class="author-name">作者名称</div>
-                            <div class="author-date">2025年04月23日</div>
                         </div>
                     </div>
                     <div class="modal-tags">
@@ -1165,6 +1441,16 @@
                             <span class="modal-tag">设计</span>
                         </div>
                     </div>
+                    
+                    <div class="modal-generate">
+                        <div id="generatedImageContainer" class="generated-image-container" style="display: none;">
+                            <div class="generated-image-wrapper">
+                                <img src="" alt="生成的图片" id="generatedImage">
+                                <button class="download-image-btn" id="downloadImageBtn">点击下载图片</button>
+                            </div>
+                        </div>
+                        <!-- 生成同款按钮已移除 -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -1174,7 +1460,73 @@
     </div>
     
     
+    <script src="coze-client.js"></script>
     <script src="auth.js"></script>
+    <!-- Coze WebSDK -->
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.6/libs/cn/index.js"></script>
+    <script>
+      // 初始化Coze WebSDK
+      // 将cozeClient声明为全局变量，确保在整个页面中可用
+      window.cozeClient = null;
+      
+      // 创建一个函数来初始化Coze WebSDK
+      function initCozeWebSDK() {
+        console.log('正在初始化Coze WebSDK...');
+        try {
+          // 使用安全的方式初始化Coze WebSDK
+          // 注意：我们使用后端接口来处理敏感信息，而不是在前端暴露API密钥
+          window.cozeClient = new CozeWebSDK.WebChatClient({
+            config: {
+              bot_id: '7498010266886471718',  // 您的Coze智能体ID
+            },
+            componentProps: {
+              title: '嘟嘟的提示库',
+              position: 'right',
+              defaultOpen: false,  // 默认不打开对话框
+              containerStyle: {
+                bottom: '20px',  // 调整高度
+                right: '20px',  // 调整位置
+                zIndex: 1000
+              }
+            },
+            auth: {
+              type: 'token',
+              // 使用后端接口获取token，而不是直接在前端暴露
+              token: async function() {
+                try {
+                  const response = await fetch('/api/coze/get-token');
+                  const data = await response.json();
+                  return data.token;
+                } catch (error) {
+                  console.error('获取Coze令牌失败:', error);
+                  return '';
+                }
+              },
+              onRefreshToken: async function() {
+                try {
+                  const response = await fetch('/api/coze/refresh-token');
+                  const data = await response.json();
+                  return data.token;
+                } catch (error) {
+                  console.error('刷新Coze令牌失败:', error);
+                  return '';
+                }
+              }
+            }
+          });
+          console.log('Coze WebSDK初始化成功!');
+        } catch (error) {
+          console.error('Coze WebSDK初始化失败:', error);
+        }
+      }
+      
+      // 在页面加载完成后初始化Coze WebSDK
+      document.addEventListener('DOMContentLoaded', function() {
+        // 延迟初始化以确保页面完全加载
+        setTimeout(initCozeWebSDK, 1000);
+      });
+    </script>
+    
     <script>
         // 交互效果
         document.addEventListener('DOMContentLoaded', function() {
@@ -1217,54 +1569,49 @@
             const promptText = document.getElementById('promptText');
             const modalClose = document.querySelector('.modal-close');
             const copyPromptBtn = document.getElementById('copyPromptBtn');
+            const resetPromptBtn = document.getElementById('resetPromptBtn');
             const favoriteBtn = document.getElementById('favoriteBtn');
+            
+            // 存储原始提示词，用于重置功能
+            let originalPrompt = "";
             
             // 弹层提示词数据
             const promptData = {
                 1: {
                     prompt: "“嘟嘟的提示词库”，纯黑色背景，矢量插画，标志，创意字体设计Logo，线条流畅且富有艺术感，小字细体字“分享请标注出处”，设计灵感：将字体进行抽象变形，创造出独特的节奏和动感，给人以强烈的视觉冲击，高级感，扁平化，设计师作品",
-                    author: "嘟嘟",
-                    date: "2025年04月24日"
+                    author: "嘟嘟"
                 },
                 2: {
                     prompt: "LOGO设计，二次元游戏字体“好好学习天天向上”，强调“学习”，字体笔画尖锐细长，更多连笔共用效果，少量英文符号装饰，纯黑色背景，白色字",
-                    author: "嘟嘟",
-                    date: "2025年04月24日"
-                },
-                2: {
-                    prompt: "AI设计图片，创意效果，高清细节，现代风格，高品质渲染。",
-                    author: "嘟嘟设计",
-                    date: "2025年04月23日"
-                },
-                2: {
-                    prompt: "🔥动感的ai节日字体咒语，红色为主，高清细节，光效炫丽，节日气息浓厚。",
-                    author: "东哥AIGC研究院",
-                    date: "2025年04月20日"
+                    author: "嘟嘟"
                 },
                 3: {
-                    prompt: "即梦AI3.0字体直出，平铺排版，多种字体样式，高清细节，现代设计感。",
-                    author: "Lumen同学",
-                    date: "2025年04月19日"
+                    prompt: "AI设计图片，创意效果，高清细节，现代风格，高品质渲染。",
+                    author: "嘟嘟设计"
                 },
                 4: {
-                    prompt: "即梦3.0直出16种高频字体，附提示词，多种字体样式平铺展示，高清细节。",
-                    author: "Love Game 拉文",
-                    date: "2025年04月18日"
+                    prompt: "🔥动感的ai节日字体咼语，红色为主，高清细节，光效炫丽，节日气息浓厚。",
+                    author: "东哥AIGC研究院"
                 },
                 5: {
-                    prompt: "即梦3.0字体设计测试，AI真的强的可怕！多种字体样式，高清细节展示。",
-                    author: "蛋饺设计",
-                    date: "2025年04月17日"
+                    prompt: "即梦AI3.0字体直出，平铺排版，多种字体样式，高清细节，现代设计感。",
+                    author: "Lumen同学"
                 },
                 6: {
-                    prompt: "平铺九宫格，正面视图，一组3D图标风格人物（医生、老师、军人、科学家、警察、画家、航天员、运动员、音乐家），粘土材质，黑色背景隔离，2D插画表现手法，30度倾斜，极简。",
-                    author: "嘟嘟设计",
-                    date: "2025年04月16日"
+                    prompt: "即梦3.0直出16种高频字体，附提示词，多种字体样式平铺展示，高清细节。",
+                    author: "Love Game 拉文"
                 },
                 7: {
+                    prompt: "即梦3.0字体设计测试，AI真的强的可怕！多种字体样式，高清细节展示。",
+                    author: "蛋饺设计"
+                },
+                8: {
+                    prompt: "平铺九宫格，正面视图，一组3D图标风格人物（医生、老师、军人、科学家、警察、画家、航天员、运动员、音乐家），粘土材质，黑色背景隔离，2D插画表现手法，30度倾斜，极简。",
+                    author: "嘟嘟设计"
+                },
+                9: {
                     prompt: "平铺九宫格，正面视图，一组3D图标风格人物（医生、老师、军人、科学家、警察、画家、航天员、运动员、音乐家），粘土材质，黑色背景隔离，2D插画表现手法，30度倾斜，极简设计。",
-                    author: "嘟嘟设计",
-                    date: "2025年04月15日"
+                    author: "嘟嘟设计"
                 }
             };
             
@@ -1283,16 +1630,20 @@
                     const cardId = this.dataset.id;
                     const data = promptData[cardId] || {
                         prompt: "这是一个示例提示词，请编辑...",
-                        author: "嘟嘟设计",
-                        date: "2025年04月23日"
+                        author: "嘟嘟设计"
                     };
                     
                     modalImage.src = imgSrc;
                     modalImage.alt = this.querySelector('img').alt;
                     modalImage.dataset.cardId = cardId;
+                    // 保存原始提示词以便重置
+                    originalPrompt = data.prompt;
                     promptText.value = data.prompt;
                     document.querySelector('.author-name').textContent = data.author;
-                    document.querySelector('.author-date').textContent = data.date;
+                    
+                    // 清空生成的图片
+                    generatedImageContainer.style.display = 'none';
+                    generatedImageContainer.innerHTML = '';
                     
                     imageModal.style.display = 'flex';
                     document.body.style.overflow = 'hidden';
@@ -1305,7 +1656,8 @@
                     
                     const cardId = card.dataset.id;
                     const data = promptData[cardId] || {
-                        prompt: "这是一个示例提示词，请编辑..."
+                        prompt: "这是一个示例提示词，请编辑...",
+                        author: "嘟嘟设计"
                     };
                     
                     // 创建一个临时文本区域来复制提示词
@@ -1334,6 +1686,9 @@
             modalClose.addEventListener('click', function() {
                 imageModal.style.display = 'none';
                 document.body.style.overflow = 'auto';
+                // 清空生成的图片
+                generatedImageContainer.style.display = 'none';
+                generatedImageContainer.innerHTML = '';
             });
             
             // 点击弹层外部关闭
@@ -1341,6 +1696,9 @@
                 if (e.target === imageModal) {
                     imageModal.style.display = 'none';
                     document.body.style.overflow = 'auto';
+                    // 清空生成的图片
+                    generatedImageContainer.style.display = 'none';
+                    generatedImageContainer.innerHTML = '';
                 }
             });
             
@@ -1349,6 +1707,110 @@
                 promptText.select();
                 document.execCommand('copy');
                 alert('提示词已复制到剪贴板！');
+            });
+            
+            // 重置提示词
+            resetPromptBtn.addEventListener('click', function() {
+                promptText.value = originalPrompt;
+                // 移除动画效果代码
+            });
+            
+            // 生成同款功能
+            const generateSimilarBtn = document.getElementById('generateSimilarBtn');
+            const generatedImageContainer = document.getElementById('generatedImageContainer');
+            const generatedImage = document.getElementById('generatedImage');
+            const downloadImageBtn = document.getElementById('downloadImageBtn');
+            
+            generateSimilarBtn.addEventListener('click', async function() {
+                // 获取原始提示词（而不是可能被用户修改过的提示词）
+                const prompt = originalPrompt;
+                
+                // 隐藏之前的错误消息（如果有）
+                generatedImageContainer.style.display = 'none';
+                
+                console.log('点击生成同款按钮，原始提示词:', prompt);
+                
+                // 如果Coze WebSDK未初始化，则重新初始化
+                if (!window.cozeClient) {
+                    console.log('检测到Coze智能体未初始化，正在初始化...');
+                    initCozeWebSDK();
+                    // 等待初始化完成
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                // 唤起Coze智能体对话框并将提示词粘贴到输入框
+                if (window.cozeClient) {
+                    console.log('正在显示Coze对话框...');
+                    // 显示对话框
+                    window.cozeClient.show();
+                    
+                    // 将提示词复制到剪贴板
+                    navigator.clipboard.writeText(prompt).then(() => {
+                        console.log('提示词已复制到剪贴板');
+                        
+                        // 给用户一个提示，说明提示词已复制
+                        const notification = document.createElement('div');
+                        notification.textContent = '提示词已复制到剪贴板，可以直接粘贴到对话框';
+                        notification.style.position = 'fixed';
+                        notification.style.bottom = '80px';
+                        notification.style.right = '20px';
+                        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                        notification.style.color = 'white';
+                        notification.style.padding = '10px 15px';
+                        notification.style.borderRadius = '4px';
+                        notification.style.zIndex = '2000';
+                        notification.style.fontSize = '14px';
+                        document.body.appendChild(notification);
+                        
+                        // 3秒后移除提示
+                        setTimeout(() => {
+                            document.body.removeChild(notification);
+                        }, 3000);
+                    }).catch(err => {
+                        console.error('复制提示词失败:', err);
+                    });
+                } else {
+                    console.error('Coze智能体对话框初始化失败');
+                    alert('无法连接到智能体，请刷新页面后重试');
+                }
+                
+                // 关闭图片弹层
+                imageModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                
+                // 清空生成的图片
+                generatedImageContainer.style.display = 'none';
+                generatedImageContainer.innerHTML = '';
+                
+                // 记录用户行为
+                console.log('用户点击生成同款按钮，将提示词发送到Coze智能体:', prompt);
+                
+                // 防止默认事件处理
+                return false;
+                
+                // 显示生成的图片的辅助函数
+                function displayGeneratedImage(imageUrl) {
+                    if (!imageUrl) {
+                        throw new Error('未能获取生成的图片 URL');
+                    }
+                    
+                    generatedImageContainer.innerHTML = `
+                        <div class="generated-image-wrapper">
+                            <img src="${imageUrl}" alt="生成的图片" id="generatedImage">
+                            <button class="download-image-btn" id="downloadImageBtn">点击下载图片</button>
+                        </div>
+                    `;
+                    
+                    // 绑定下载按钮事件
+                    document.getElementById('downloadImageBtn').addEventListener('click', function() {
+                        const link = document.createElement('a');
+                        link.href = imageUrl;
+                        link.download = '生成图片_' + new Date().getTime() + '.jpg';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    });
+                }
             });
             
             // 联系按钮与浮层
@@ -1460,5 +1922,8 @@
             });
         });
     </script>
+    
+    <!-- 引入 Coze 工作流相关文件 -->
+    <script src="coze-client.js"></script>
 </body>
 </html>

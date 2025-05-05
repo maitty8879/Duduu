@@ -12,3 +12,10 @@ Thumbs.db  # Win专属
 
 # 忽略Node.js依赖目录
 /node_modules/
+
+# 忽略环境变量文件
+.env
+.env.local
+.env.development
+.env.test
+.env.production
