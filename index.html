@@ -17,112 +17,27 @@
         body {
             background-color: #121212;
             color: #f5f5f5;
-            display: flex;
             height: 100vh;
             overflow: hidden;
         }
         
-        /* 移动端适配基础样式 */
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-        }
-        
-        /* 左侧导航栏 */
-        .sidebar {
-            width: 220px;
-            background-color: #1e1e1e;
-            color: #fff;
-            height: 100vh;
-            overflow-y: auto;
-            flex-shrink: 0;
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: 60px;
-                display: flex;
-                align-items: center;
-                overflow-x: auto;
-                overflow-y: hidden;
-            }
-        }
-        
-        .logo {
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        @media (max-width: 768px) {
-            .logo {
-                padding: 0 15px;
-                height: 60px;
-                border-bottom: none;
-                border-right: 1px solid rgba(255, 255, 255, 0.1);
-            }
-        }
-        
-        .logo-text {
-            font-weight: bold;
-            font-size: 18px;
-            color: #fff;
-        }
-        
-        .nav-item {
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .nav-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .nav-item i {
-            margin-right: 10px;
-            font-size: 20px;
-        }
-        
-        .nav-item.active {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .nav-section {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .nav-section-title {
-            padding: 5px 20px;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.5);
-            text-transform: uppercase;
-        }
-        
         /* 主内容区 */
         .main-content {
-            flex: 1;
             display: flex;
             flex-direction: column;
             height: 100vh;
+            width: 100%;
             overflow: hidden;
         }
         
         @media (max-width: 768px) {
             .main-content {
-                height: calc(100vh - 60px);
+                height: 100vh;
             }
         }
         
-        /* 顶部搜索栏 */
-        .search-bar {
+        /* 顶部导航栏 */
+        .top-bar {
             padding: 15px 20px;
             background-color: #1e1e1e;
             display: flex;
@@ -131,25 +46,33 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-image {
+            height: 40px;
+            width: auto;
+        }
+        
+        .slogan {
+            margin-left: 15px;
+            font-size: 14px;
+            color: #aaa;
+            font-weight: 300;
+        }
+        
         @media (max-width: 768px) {
-            .search-bar {
-                padding: 10px;
+            .slogan {
+                display: none;
             }
         }
         
-        .search-input {
-            background-color: #333;
-            border: none;
-            border-radius: 20px;
-            padding: 8px 15px;
-            width: 300px;
-            font-size: 14px;
-            color: #f5f5f5;
-        }
-        
-        .search-input:focus {
-            outline: none;
-            background-color: #444;
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 10px;
+            }
         }
         
         .user-actions {
@@ -1126,54 +1049,20 @@
         .forgot-password {
             color: #e91e63;
             text-decoration: none;
-        }
-        
         .forgot-password:hover {
             text-decoration: underline;
-        }
-        
-        .login-submit-btn {
-            width: 100%;
-            padding: 10px;
-            background-color: #e91e63;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        }
-        
-        .login-submit-btn:hover {
-            background-color: #d81b60;
-        }
-        
-        .modal-action-btn i {
-            margin-right: 5px;
         }
     </style>
 </head>
 <body>
-    <!-- 左侧导航栏 -->
-    <div class="sidebar">
-        <div class="logo">
-            <span class="logo-text">嘟嘟的提示库</span>
-        </div>
-        
-        <div class="nav-item active" onclick="window.location.href='index.html'">
-            <i class="ri-home-fill"></i>
-            <span>首页</span>
-        </div>
-    </div>
-    
-    <!-- 主内容区 -->
     <div class="main-content">
-        <!-- 顶部搜索栏 -->
-        <div class="search-bar">
-            <input type="text" class="search-input" placeholder="搜索图片...">
+        <!-- 顶部导航栏 -->
+        <div class="top-bar">
+            <div class="logo-container">
+                <img src="image/logo.svg" alt="Dudu Logo" class="logo-image">
+                <div class="slogan">搜索、重建、分享，运营效率提升必备神器</div>
+            </div>
             <div class="user-actions">
-
                 <button id="loginBtn" class="login-btn"><i class="ri-user-line"></i> 登录/注册</button>
             </div>
         </div>
@@ -1184,8 +1073,11 @@
             <div class="category-tab" data-tag="字体">字体</div>
             <div class="category-tab" data-tag="插画">插画</div>
             <div class="category-tab" data-tag="3d">3D</div>
-            <div class="category-tab" data-tag="即梦">即梦</div>
-            <div class="category-tab" data-tag="4o">4O</div>
+            <div class="category-tab" data-tag="写实">写实</div>
+            <div class="category-tab" data-tag="动漫">动漫</div>
+            <div class="category-tab" data-tag="油画">油画</div>
+            <div class="category-tab" data-tag="水彩">水彩</div>
+            <div class="category-tab" data-tag="像素">像素</div>
         </div>
         
         <!-- 图片画廊 -->
@@ -1193,6 +1085,22 @@
             <!-- 图片卡片 - 创意字体设计 -->
             <div class="image-card">
                 <img src="image/design2.jpg" alt="创意字体设计">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">字体</span>
+                        <span class="image-tag">即梦</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 新增图片卡片 - 创意字体设计 -->
+            <div class="image-card">
+                <img src="image/design3.jpg" alt="创意字体设计">
                 <div class="image-info">
                     <div class="image-tags">
                         <span class="image-tag">字体</span>
@@ -1239,7 +1147,7 @@
             
             <!-- 图片卡片2 - 动感AI节日字体 -->
             <div class="image-card">
-                <img src="image/🔥动感的ai节日字体咒语_1_东哥AIGC研究院_来自小红书网页版.jpg" alt="动感AI节日字体">
+                <img src="image/🔥动感的ai节日字体咼语_1_东哥AIGC研究院_来自小红书网页版.jpg" alt="动感AI节日字体">
                 <div class="image-info">
                     <div class="image-tags">
                         <span class="image-tag">节日</span>
@@ -1334,8 +1242,6 @@
             </div>
         </div>
     </div>
-    
-    <!-- Coze智能体已集成到页面中 -->
     
     <!-- 登录/注册弹窗 -->
     <div id="loginModal" class="login-modal">
@@ -1586,7 +1492,7 @@
                     author: "嘟嘟"
                 },
                 3: {
-                    prompt: "AI设计图片，创意效果，高清细节，现代风格，高品质渲染。",
+                    prompt: "“野蛮生长”，纯黑色背景，矢量插画，标志，创意字体设计Logo，笔画使用艺术图形替换，创意LOGO，极具创意且和谐，小字细体字“嘟嘟原创提示词”，设计灵感：字体风格（手写/科技/扁平/瘦高/流畅/复古等风格随机）将字体进行抽象变形，创造出独特的节奏和动感，给人以强烈的视觉冲击，高级感，扁平化，设计师作品",
                     author: "嘟嘟设计"
                 },
                 4: {
