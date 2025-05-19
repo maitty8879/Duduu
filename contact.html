@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>嘟嘟的提示库 - 联系嘟嘟</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #121212;
+            color: #f5f5f5;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 左侧导航栏 */
+        .sidebar {
+            width: 220px;
+            background-color: #1e1e1e;
+            color: #fff;
+            height: 100vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .logo {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo-text {
+            font-weight: bold;
+            font-size: 18px;
+            color: #fff;
+        }
+        
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-item i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .contact-container {
+            max-width: 600px;
+            padding: 40px;
+            background-color: rgba(30, 30, 30, 0.7);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .contact-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 0 auto 20px;
+            border: 4px solid rgba(233, 30, 99, 0.7);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .contact-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .contact-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        
+        .contact-message {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #ddd;
+            margin-bottom: 30px;
+        }
+        
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #aaa;
+        }
+        
+        .contact-item i {
+            font-size: 20px;
+            color: #e91e63;
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧导航栏 -->
+    <div class="sidebar">
+        <div class="logo">
+            <span class="logo-text">嘟嘟的提示库</span>
+        </div>
+        
+        <div class="nav-item" onclick="window.location.href='index.html'">
+            <i class="ri-home-line"></i>
+            <span>首页</span>
+        </div>
+        
+        <div class="nav-item active">
+            <i class="ri-message-3-line"></i>
+            <span>联系嘟嘟</span>
+        </div>
+    </div>
+    
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <div class="contact-container">
+            <div class="contact-avatar">
+                <img src="image/头像.png" alt="嘟嘟头像">
+            </div>
+            <div class="contact-title">联系嘟嘟</div>
+            <div class="contact-message">
+                有好的提示词欢迎知音楼联系嘟嘟老师～
+            </div>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="ri-wechat-line"></i>
+                    <span>微信: wdjlisa</span>
+                </div>
+                <div class="contact-item">
+                    <i class="ri-mail-line"></i>
+                    <span>邮箱: wdjlisa@gmail.com</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

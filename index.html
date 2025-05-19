@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>嘟嘟的提示库 - AI提示词分享平台</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+    <meta name="theme-color" content="#121212">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #121212;
+            color: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                height: 100vh;
+            }
+        }
+        
+        /* 顶部导航栏 */
+        .top-bar {
+            padding: 15px 20px;
+            background-color: #1e1e1e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-image {
+            height: 40px;
+            width: auto;
+        }
+        
+        .slogan {
+            margin-left: 15px;
+            font-size: 14px;
+            color: #aaa;
+            font-weight: 300;
+        }
+        
+        @media (max-width: 768px) {
+            .slogan {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 10px;
+            }
+        }
+        
+        .user-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: 15px;
+            color: #aaa;
+        }
+        
+        .user-actions .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-left: 15px;
+            object-fit: cover;
+        }
+        
+        /* 分类标签 */
+        .category-tabs {
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            background-color: #1e1e1e;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .category-tabs {
+                padding: 10px;
+                gap: 8px;
+            }
+        }
+        
+        .category-tab {
+            padding: 12px 15px;
+            cursor: pointer;
+            position: relative;
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        .category-tab.active {
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .category-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 15px;
+            right: 15px;
+            height: 2px;
+            background-color: #fff;
+        }
+        
+        /* 图片画廊 */
+        .gallery {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            column-count: 4; /* 固定4列 */
+            column-gap: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        @media (max-width: 1200px) {
+            .gallery {
+                column-count: 3; /* 中等屏幕3列 */
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .gallery {
+                column-count: 2; /* 小屏幕2列 */
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .gallery {
+                padding: 10px;
+                column-count: 1; /* 移动端1列 */
+                column-gap: 15px;
+            }
+        }
+        
+        .image-card {
+            background-color: #1a1a1a; /* 与图片背景色保持一致 */
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            height: auto;
+            width: 100%;
+            margin-bottom: 30px; /* 卡片之间的垂直间距 */
+            padding-top: 0; /* 移除上内边距 */
+            break-inside: avoid; /* 防止卡片被分割到不同列 */
+            page-break-inside: avoid; /* 兼容旧浏览器 */
+        }
+        
+        .image-card.filtered-out {
+            display: none;
+        }
+        
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+        
+        .image-card:hover .image-info {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .image-card img {
+            width: 100%;
+            height: auto; /* 高度自适应 */
+            display: block;
+            object-fit: cover; /* 改回为cover使图片铺满卡片 */
+            background-color: #1a1a1a; /* 图片背景色 */
+            padding: 0; /* 移除内边距 */
+            min-height: 200px; /* 最小高度确保图片区域有足够空间 */
+        }
+        
+        .image-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            padding: 15px;
+            color: #fff;
+            transition: all 0.3s ease;
+            height: 80px; /* 减少高度，避免卡片上下重叠 */
+            z-index: 1; /* 确保标签条在最上层 */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            transition: all 0.3s ease;
+            opacity: 0.8;
+            transform: translateY(0);
+        }
+        
+        .image-tags {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            margin-top: 5px;
+        }
+        
+        .image-tag {
+            background-color: rgba(51, 51, 51, 0.7);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 5px;
+            color: #fff;
+            white-space: nowrap;
+        }
+        
+        .image-actions {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            z-index: 2;
+        }
+        
+        .image-action {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: rgba(40, 40, 40, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .image-action:hover {
+            background-color: rgba(60, 60, 60, 0.9);
+        }
+        
+        .image-action.favorited {
+            background-color: rgba(26, 214, 98, 0.7);
+        }
+        
+        .image-action.favorited:hover {
+            background-color: rgba(26, 214, 98, 0.9);
+        }
+        
+        /* 复制按钮成功状态 */
+        .image-action.copy-success {
+            background-color: rgba(76, 175, 80, 0.7);
+        }
+        
+        .image-action.copy-success:hover {
+            background-color: rgba(76, 175, 80, 0.9);
+        }
+        
+        .image-action i {
+            font-size: 16px;
+            color: #fff;
+        }
+        
+        /* 底部按钮 */
+        .bottom-action {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #e91e63;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s;
+        }
+        
+        @media (max-width: 768px) {
+            .bottom-action {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .bottom-action i {
+                font-size: 20px;
+            }
+        }
+        
+        .bottom-action:hover {
+            transform: scale(1.1);
+        }
+        
+        .bottom-action i {
+            font-size: 24px;
+            color: #fff;
+        }
+        
+        /* 联系浮层 */
+        .contact-tooltip {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 280px;
+            background-color: rgba(30, 30, 30, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 9;
+            transform: translateY(20px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .contact-tooltip.show {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .contact-tooltip-content {
+            color: #f5f5f5;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .contact-tooltip-content p {
+            margin: 0 0 10px 0;
+        }
+        
+        .contact-tooltip-content .highlight {
+            color: #e91e63;
+            font-weight: bold;
+        }
+        
+        .contact-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            right: 30px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid rgba(30, 30, 30, 0.9);
+        }
+        
+        /* 图片弹层样式 */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+        }
+        
+        .modal-close {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            width: 36px;
+            height: 36px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1001;
+            transition: background-color 0.2s;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-close:hover {
+            background-color: rgba(26, 214, 98, 0.7);
+        }
+        
+        .modal-close i {
+            color: #fff;
+            font-size: 22px;
+        }
+        
+        .modal-body {
+            display: flex;
+            height: 100%;
+        }
+        
+        .modal-image-container {
+            flex: 1;
+            height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #121212;
+        }
+        
+        .modal-image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .modal-info {
+            width: 350px;
+            padding: 20px;
+            background-color: #1a1a1a;
+            border-left: 1px solid #333;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+        
+        @media (max-width: 768px) {
+            .modal-body {
+                flex-direction: column;
+                height: 95vh;
+                overflow-y: auto;
+            }
+            
+            .modal-image-container {
+                height: 40vh;
+                min-height: 200px;
+            }
+            
+            .modal-info {
+                width: 100%;
+                height: auto;
+                border-left: none;
+                border-top: 1px solid #333;
+                max-height: none;
+            }
+        }
+        
+        .modal-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .modal-info-header h3 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #fff;
+            margin: 0;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal-action-btn {
+            background-color: #333;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            margin-right: 8px;
+        }
+        
+        .modal-action-btn i {
+            margin-right: 5px;
+        }
+        
+        .modal-action-btn:hover {
+            background-color: #444;
+        }
+        
+        #copyPromptBtn:hover {
+            background-color: #2196F3;
+        }
+        
+        #resetPromptBtn:hover {
+            background-color: #FF5722;
+        }
+        
+        /* 移除重置动效样式 */
+        
+        .modal-prompt {
+            margin-bottom: 20px;
+        }
+        
+        .modal-prompt label {
+            display: block;
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+        
+        .modal-prompt textarea {
+            width: 100%;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 10px;
+            color: #fff;
+            font-size: 14px;
+            resize: none;
+            line-height: 1.5;
+        }
+        
+        .modal-prompt textarea:focus {
+            outline: none;
+            border-color: #666;
+        }
+        
+        .modal-author {
+            margin-bottom: 20px;
+        }
+        
+        .author-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .author-name {
+            font-weight: 500;
+            color: #fff;
+        }
+        
+        .author-date {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .modal-tags {
+            margin-top: 20px;
+        }
+        
+        .modal-tags-title {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+        
+        .modal-tags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .modal-tag {
+            background-color: #333;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        /* 生成同款相关样式 */
+        .modal-generate {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .generate-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .generate-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .generated-image-container {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #222;
+        }
+        
+        .generated-image-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        
+        .generated-image-wrapper img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        
+        .download-image-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .download-image-btn:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        
+        .loading-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            background-color: #222;
+            border-radius: 4px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 登录/注册按钮样式 */
+        .login-btn {
+            display: flex;
+            align-items: center;
+            background-color: rgba(26, 214, 98, 0.8);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 6px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .login-btn i {
+            margin-right: 5px;
+        }
+        
+        /* 登录按钮悬停效果 */
+        .login-btn:hover {
+            background-color: #1AD662;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 联系按钮样式 */
+        .contact-btn {
+            background-color: transparent;
+            border: 1px solid #1AD662;
+            color: #1AD662;
+            border-radius: 20px;
+            padding: 6px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-btn:hover {
+            background-color: rgba(26, 173, 98, 0.2);
+            border-color: #1AD662;
+        }
+        
+        /* 登录/注册弹窗样式 */
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .login-modal.open {
+            display: flex;
+        }
+        
+        .login-modal-content {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .login-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .login-modal-header h2 {
+            font-size: 18px;
+            color: #fff;
+            margin: 0;
+        }
+        
+        .login-modal-close {
+            font-size: 24px;
+            color: #aaa;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .login-modal-close:hover {
+            color: #fff;
+        }
+        
+        .login-modal-body {
+            padding: 20px;
+        }
+        
+        .login-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .login-tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            color: #aaa;
+            position: relative;
+            transition: color 0.2s;
+        }
+        
+        .login-tab.active {
+            color: #fff;
+        }
+        
+        .login-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #1AD662;
+        }
+        
+        .login-form {
+            display: none;
+        }
+        
+        .login-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ddd;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            background-color: #333;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #e91e63;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            color: #aaa;
+        }
+        
+        .remember-me input {
+            margin-right: 5px;
+        }
+        
+        .forgot-password {
+            color: #e91e63;
+            text-decoration: none;
+        }
+        
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+        
+        .loading-spinner-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .error-message {
+            color: red;
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <!-- 顶部导航栏 -->
+        <div class="top-bar">
+            <div class="logo-container">
+                <img src="image/logo.svg" alt="Dudu Logo" class="logo-image">
+                <div class="slogan">搜索、重建、分享，运营效率提升必备神器</div>
+            </div>
+            <div class="user-actions">
+                <button id="loginBtn" class="login-btn"><i class="ri-user-line"></i> 登录/注册</button>
+            </div>
+        </div>
+        
+        <!-- 分类标签 -->
+        <div class="category-tabs">
+            <div class="category-tab active" data-tag="all">全部</div>
+            <div class="category-tab" data-tag="字体">字体</div>
+            <div class="category-tab" data-tag="插画">插画</div>
+            <div class="category-tab" data-tag="海报">海报</div>
+        </div>
+        
+        <!-- 图片画廊 -->
+        <div class="gallery">
+            <!-- 图片卡片 - 学习金句日签海报 -->
+            <div class="image-card">
+                <img src="image/design5.png" alt="学习金句日签海报">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">海报</span>
+                        <span class="image-tag">日签</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图片卡片 - 创意字体设计 -->
+            <div class="image-card">
+                <img src="image/design2.jpg" alt="创意字体设计">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">字体</span>
+                        <span class="image-tag">即梦</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 新增图片卡片 - 创意字体设计 -->
+            <div class="image-card">
+                <img src="image/design3.jpg" alt="创意字体设计">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">字体</span>
+                        <span class="image-tag">即梦</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图片卡片 - 二次元游戏字体 -->
+            <div class="image-card">
+                <img src="image/design1.jpg" alt="二次元游戏字体">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">字体</span>
+                        <span class="image-tag">即梦</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- 图片卡片1 - AI设计 -->
+            <div class="image-card">
+                <img src="image/未命名项目-图层 1 (15).png" alt="AI设计图片">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">AI设计</span>
+                        <span class="image-tag">创意</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图片卡片2 - 动感AI节日字体 -->
+            <div class="image-card">
+                <img src="image/🔥动感的ai节日字体咼语_1_东哥AIGC研究院_来自小红书网页版.jpg" alt="动感AI节日字体">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">节日</span>
+                        <span class="image-tag">字体</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图片卡片3 - 即梦AI字体 -->
+            <div class="image-card">
+                <img src="image/即梦AI3.0字体直出，没想到这么强！！_5_Lumen同学_来自小红书网页版.jpg" alt="即梦AI字体">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">即梦</span>
+                        <span class="image-tag">字体</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图片卡片4 - 即梦高频字体 -->
+            <div class="image-card">
+                <img src="image/即梦3.0👨🏻_💻直出16种高频字体_附提示词_1_Love Game_拉文_来自小红书网页版.jpg" alt="即梦高频字体">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">高频</span>
+                        <span class="image-tag">字体</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图片卡片5 - 即梦字体设计 -->
+            <div class="image-card">
+                <img src="image/即梦3.0字体设计测试，AI真的强的可怕！_1_蛋饺设计_来自小红书网页版.jpg" alt="即梦字体设计">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">即梦</span>
+                        <span class="image-tag">设计</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图片卡片6 - 3D图标风格人物 -->
+            <div class="image-card">
+                <img src="image/平铺九宫格，正面视图，一组3D图标风格人物（医生、老师、军人、科学家、警察、画家、航天员、运动员、音乐家），粘土材质，黑色背景隔离，2D插画表现手法，30度倾斜，极简.jpeg" alt="3D图标风格人物">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">3D</span>
+                        <span class="image-tag">图标</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图片卡片7 - 设计作品 -->
+            <div class="image-card">
+                <img src="image/design6.png" alt="设计作品">
+                <div class="image-info">
+                    <div class="image-tags">
+                        <span class="image-tag">设计</span>
+                        <span class="image-tag">创意</span>
+                    </div>
+                </div>
+                <div class="image-actions">
+                    <div class="image-action copy-btn">
+                        <i class="ri-file-copy-line"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 登录/注册弹窗 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <div class="login-modal-header">
+                <h2 id="loginModalTitle">登录</h2>
+                <span class="login-modal-close">&times;</span>
+            </div>
+            <div class="login-modal-body">
+                <div class="login-tabs">
+                    <div class="login-tab active" data-tab="login">登录</div>
+                    <div class="login-tab" data-tab="register">注册</div>
+                </div>
+                
+                <!-- 登录表单 -->
+                <div id="loginForm" class="login-form active">
+                    <div class="form-group">
+                        <label for="loginUsername">用户名</label>
+                        <input type="text" id="loginUsername" placeholder="请输入用户名">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">密码</label>
+                        <input type="password" id="loginPassword" placeholder="请输入密码">
+                    </div>
+                    <div class="form-actions">
+                        <div class="remember-me">
+                            <input type="checkbox" id="rememberMe">
+                            <label for="rememberMe">记住我</label>
+                        </div>
+                        <a href="#" class="forgot-password">忘记密码?</a>
+                    </div>
+                    <button class="login-submit-btn">登录</button>
+                </div>
+                
+                <!-- 注册表单 -->
+                <div id="registerForm" class="login-form">
+                    <div class="form-group">
+                        <label for="registerUsername">用户名</label>
+                        <input type="text" id="registerUsername" placeholder="请输入用户名">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">邮箱</label>
+                        <input type="email" id="registerEmail" placeholder="请输入邮箱">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">密码</label>
+                        <input type="password" id="registerPassword" placeholder="请输入密码">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">确认密码</label>
+                        <input type="password" id="confirmPassword" placeholder="请再次输入密码">
+                    </div>
+                    <button class="login-submit-btn">注册</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 联系浮层 -->
+    <div class="contact-tooltip" id="contactTooltip">
+        <div class="contact-tooltip-content">
+            <p>功能优化ing，收集更多的提示词 ing...</p>
+            <p>联系作者：知音楼搜索<span class="highlight">嘟嘟</span></p>
+            <p>微信：<span class="highlight">wdjlisa</span></p>
+        </div>
+    </div>
+    
+    <!-- 图片弹层 -->
+    <div class="image-modal" id="imageModal">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="modal-image-container">
+                    <img src="" alt="" id="modalImage">
+                </div>
+                <div class="modal-info">
+                    <div class="modal-info-header">
+                        <h3>提示词详情</h3>
+                        <div class="modal-actions">
+                            <button class="modal-action-btn" id="copyPromptBtn">
+                                <i class="ri-file-copy-line"></i>
+                                <span>复制</span>
+                            </button>
+                            <button class="modal-action-btn" id="resetPromptBtn">
+                                <i class="ri-refresh-line"></i>
+                                <span>重置</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-prompt">
+                        <label for="promptText">提示词</label>
+                        <textarea id="promptText" rows="6" placeholder="输入提示词..."></textarea>
+                    </div>
+                    <div class="modal-author">
+                        <div class="author-info">
+                            <div class="author-name">作者名称</div>
+                        </div>
+                    </div>
+                    <div class="modal-tags">
+                        <div class="modal-tags-title">相关标签</div>
+                        <div class="modal-tags-list">
+                            <span class="modal-tag">即梦</span>
+                            <span class="modal-tag">字体</span>
+                            <span class="modal-tag">AI</span>
+                            <span class="modal-tag">设计</span>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-generate">
+                        <div id="generatedImageContainer" class="generated-image-container" style="display: none;">
+                            <div class="generated-image-wrapper">
+                                <img src="" alt="生成的图片" id="generatedImage">
+                                <button class="download-image-btn" id="downloadImageBtn">点击下载图片</button>
+                            </div>
+                        </div>
+                        <!-- 生成同款按钮已移除 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-close">
+            <i class="ri-close-line"></i>
+        </div>
+    </div>
+    
+    
+    <script src="coze-client.js"></script>
+    <script src="auth.js"></script>
+    <!-- Coze WebSDK -->
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.6/libs/cn/index.js"></script>
+    <script>
+      // 初始化Coze WebSDK
+      // 将cozeClient声明为全局变量，确保在整个页面中可用
+      window.cozeClient = null;
+      
+      // 创建一个函数来初始化Coze WebSDK
+      function initCozeWebSDK() {
+        console.log('正在初始化Coze WebSDK...');
+        try {
+          // 使用安全的方式初始化Coze WebSDK
+          // 注意：我们使用后端接口来处理敏感信息，而不是在前端暴露API密钥
+          window.cozeClient = new CozeWebSDK.WebChatClient({
+            config: {
+              bot_id: '7498010266886471718',  // 您的Coze智能体ID
+            },
+            componentProps: {
+              title: '嘟嘟的提示库',
+              position: 'right',
+              defaultOpen: false,  // 默认不打开对话框
+              containerStyle: {
+                bottom: '20px',  // 调整高度
+                right: '20px',  // 调整位置
+                zIndex: 1000
+              }
+            },
+            auth: {
+              type: 'token',
+              // 使用后端接口获取token，而不是直接在前端暴露
+              token: async function() {
+                try {
+                  const response = await fetch('/api/coze/get-token');
+                  const data = await response.json();
+                  return data.token;
+                } catch (error) {
+                  console.error('获取Coze令牌失败:', error);
+                  return '';
+                }
+              },
+              onRefreshToken: async function() {
+                try {
+                  const response = await fetch('/api/coze/refresh-token');
+                  const data = await response.json();
+                  return data.token;
+                } catch (error) {
+                  console.error('刷新Coze令牌失败:', error);
+                  return '';
+                }
+              }
+            }
+          });
+          console.log('Coze WebSDK初始化成功!');
+        } catch (error) {
+          console.error('Coze WebSDK初始化失败:', error);
+        }
+      }
+      
+      // 在页面加载完成后初始化Coze WebSDK
+      document.addEventListener('DOMContentLoaded', function() {
+        // 延迟初始化以确保页面完全加载
+        setTimeout(initCozeWebSDK, 1000);
+      });
+    </script>
+    
+    <script>
+        // 交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 分类标签切换与筛选
+            const tabs = document.querySelectorAll('.category-tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // 更新标签样式
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 获取选中的标签
+                    const selectedTag = this.dataset.tag;
+                    
+                    // 筛选图片卡片
+                    imageCards.forEach(card => {
+                        if (selectedTag === 'all') {
+                            // 如果选择"全部"，显示所有卡片
+                            card.classList.remove('filtered-out');
+                        } else {
+                            // 获取卡片的标签
+                            const cardTags = Array.from(card.querySelectorAll('.image-tag')).map(tag => tag.textContent);
+                            
+                            // 如果卡片包含选中的标签，显示它，否则隐藏
+                            if (cardTags.includes(selectedTag)) {
+                                card.classList.remove('filtered-out');
+                            } else {
+                                card.classList.add('filtered-out');
+                            }
+                        }
+                    });
+                });
+            });
+            
+            // 图片卡片点击事件
+            const imageCards = document.querySelectorAll('.image-card');
+            const imageModal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            const promptText = document.getElementById('promptText');
+            const modalClose = document.querySelector('.modal-close');
+            const copyPromptBtn = document.getElementById('copyPromptBtn');
+            const resetPromptBtn = document.getElementById('resetPromptBtn');
+            const favoriteBtn = document.getElementById('favoriteBtn');
+            
+            // 存储原始提示词，用于重置功能
+            let originalPrompt = "";
+            
+            // 弹层提示词数据
+            const promptData = {
+                "1": {
+                    prompt: "\"学习金句\"日签海报",
+                    author: "嘟嘟"
+                },
+                "2": {
+                    prompt: "嘟嘟的提示词库，纯黑色背景，矢量插画，标志，创意字体设计Logo。线条流畅且富有艺术感，小字细体字设计Logo。设计灵感：将字体进行抽象变形，创造出独特的节奏和动感，给人以强烈的视觉冲击，高级感，扁平化，设计师作品",
+                    author: "嘟嘟"
+                },
+                "3": {
+                    prompt: "LOGO设计，二次元游戏字体好好学习天天向上，强调学习，字体笔画尖锐细长，更多连笔共用效果，少量英文符号装饰，纯黑色背景，白色字",
+                    author: "嘟嘟"
+                },
+                "4": {
+                    prompt: "野蛮生长，纯黑色背景，矢量插画，标志，创意字体设计Logo，笔画使用艺术图形替换，创意LOGO，极具创意且和谐，小字细体字嘟嘟原创提示词，设计灵感：字体风格（手写/科技/扁平/瘦高/流畅/复古等风格随机）将字体进行抽象变形，创造出独特的节奏和动感，给人以强烈的视觉冲击，高级感，扁平化，设计师作品",
+                    author: "嘟嘟设计"
+                },
+                5: {
+                    prompt: "🔥动感的ai节日字体咼语，红色为主，高清细节，光效炫丽，节日气息浓厚。",
+                    author: "东哥AIGC研究院"
+                },
+                6: {
+                    prompt: "即梦AI3.0字体直出，平铺排版，多种字体样式，高清细节，现代设计感。",
+                    author: "Lumen同学"
+                },
+                7: {
+                    prompt: "即梦3.0直出16种高频字体，附提示词，多种字体样式平铺展示，高清细节。",
+                    author: "Love Game 拉文"
+                },
+                8: {
+                    prompt: "即梦3.0字体设计测试，AI真的强的可怕！多种字体样式，高清细节展示。",
+                    author: "蛋饺设计"
+                },
+                9: {
+                    prompt: "平铺九宫格，正面视图，一组3D图标风格人物（医生、老师、军人、科学家、警察、画家、航天员、运动员、音乐家），粘土材质，黑色背景隔离，2D插画表现手法，30度倾斜，极简。",
+                    author: "嘟嘟设计"
+                },
+                10: {
+                    prompt: "平铺九宫格，正面视图，一组3D图标风格人物（医生、老师、军人、科学家、警察、画家、航天员、运动员、音乐家），粘土材质，黑色背景隔离，2D插画表现手法，30度倾斜，极简设计。",
+                    author: "嘟嘟设计"
+                }
+            };
+            
+            imageCards.forEach((card, index) => {
+                // 设置卡片ID
+                card.dataset.id = (index + 1).toString();
+                
+                // 添加图片卡片点击事件（打开弹层）
+                card.addEventListener('click', function(e) {
+                    // 如果点击的是收藏按钮或复制按钮，不打开弹层
+                    if (e.target.closest('.image-action')) {
+                        return;
+                    }
+                    
+                    const imgSrc = this.querySelector('img').src;
+                    const cardId = this.dataset.id;
+                    const data = promptData[cardId] || {
+                        prompt: "这是一个示例提示词，请编辑...",
+                        author: "嘟嘟设计"
+                    };
+                    
+                    modalImage.src = imgSrc;
+                    modalImage.alt = this.querySelector('img').alt;
+                    modalImage.dataset.cardId = cardId;
+                    // 保存原始提示词以便重置
+                    originalPrompt = data.prompt;
+                    promptText.value = data.prompt;
+                    document.querySelector('.author-name').textContent = data.author;
+                    
+                    // 清空生成的图片
+                    generatedImageContainer.style.display = 'none';
+                    generatedImageContainer.innerHTML = '';
+                    
+                    imageModal.style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                });
+                
+                // 添加复制按钮点击事件
+                const copyBtn = card.querySelector('.image-action');
+                copyBtn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // 阻止事件冒泡
+                    
+                    const cardId = card.dataset.id;
+                    const data = promptData[cardId] || {
+                        prompt: "这是一个示例提示词，请编辑...",
+                        author: "嘟嘟设计"
+                    };
+                    
+                    // 创建一个临时文本区域来复制提示词
+                    const textarea = document.createElement('textarea');
+                    textarea.value = data.prompt;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    // 显示复制成功提示
+                    const originalBackground = this.style.backgroundColor;
+                    const originalIcon = this.innerHTML;
+                    
+                    this.style.backgroundColor = '#4caf50';
+                    this.innerHTML = '<i class="ri-check-line"></i>';
+                    
+                    setTimeout(() => {
+                        this.style.backgroundColor = originalBackground;
+                        this.innerHTML = originalIcon;
+                    }, 1500);
+                });
+            });
+            
+            // 关闭弹层
+            modalClose.addEventListener('click', function() {
+                imageModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                // 清空生成的图片
+                generatedImageContainer.style.display = 'none';
+                generatedImageContainer.innerHTML = '';
+            });
+            
+            // 点击弹层外部关闭
+            imageModal.addEventListener('click', function(e) {
+                if (e.target === imageModal) {
+                    imageModal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    // 清空生成的图片
+                    generatedImageContainer.style.display = 'none';
+                    generatedImageContainer.innerHTML = '';
+                }
+            });
+            
+            // 复制提示词
+            copyPromptBtn.addEventListener('click', function() {
+                promptText.select();
+                document.execCommand('copy');
+                alert('提示词已复制到剪贴板！');
+            });
+            
+            // 重置提示词
+            resetPromptBtn.addEventListener('click', function() {
+                promptText.value = originalPrompt;
+                // 移除动画效果代码
+            });
+            
+            // 生成同款功能
+            const generateSimilarBtn = document.getElementById('generateSimilarBtn');
+            const generatedImageContainer = document.getElementById('generatedImageContainer');
+            const generatedImage = document.getElementById('generatedImage');
+            const downloadImageBtn = document.getElementById('downloadImageBtn');
+            
+            generateSimilarBtn.addEventListener('click', async function() {
+                // 获取原始提示词（而不是可能被用户修改过的提示词）
+                const prompt = originalPrompt;
+                
+                // 隐藏之前的错误消息（如果有）
+                generatedImageContainer.style.display = 'none';
+                
+                console.log('点击生成同款按钮，原始提示词:', prompt);
+                
+                // 如果Coze WebSDK未初始化，则重新初始化
+                if (!window.cozeClient) {
+                    console.log('检测到Coze智能体未初始化，正在初始化...');
+                    initCozeWebSDK();
+                    // 等待初始化完成
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                // 唤起Coze智能体对话框并将提示词粘贴到输入框
+                if (window.cozeClient) {
+                    console.log('正在显示Coze对话框...');
+                    // 显示对话框
+                    window.cozeClient.show();
+                    
+                    // 将提示词复制到剪贴板
+                    navigator.clipboard.writeText(prompt).then(() => {
+                        console.log('提示词已复制到剪贴板');
+                        
+                        // 给用户一个提示，说明提示词已复制
+                        const notification = document.createElement('div');
+                        notification.textContent = '提示词已复制到剪贴板，可以直接粘贴到对话框';
+                        notification.style.position = 'fixed';
+                        notification.style.bottom = '80px';
+                        notification.style.right = '20px';
+                        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                        notification.style.color = 'white';
+                        notification.style.padding = '10px 15px';
+                        notification.style.borderRadius = '4px';
+                        notification.style.zIndex = '2000';
+                        notification.style.fontSize = '14px';
+                        document.body.appendChild(notification);
+                        
+                        // 3秒后移除提示
+                        setTimeout(() => {
+                            document.body.removeChild(notification);
+                        }, 3000);
+                    }).catch(err => {
+                        console.error('复制提示词失败:', err);
+                    });
+                } else {
+                    console.error('Coze智能体对话框初始化失败');
+                    alert('无法连接到智能体，请刷新页面后重试');
+                }
+                
+                // 关闭图片弹层
+                imageModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                
+                // 清空生成的图片
+                generatedImageContainer.style.display = 'none';
+                generatedImageContainer.innerHTML = '';
+                
+                // 记录用户行为
+                console.log('用户点击生成同款按钮，将提示词发送到Coze智能体:', prompt);
+                
+                // 防止默认事件处理
+                return false;
+                
+                // 显示生成的图片的辅助函数
+                function displayGeneratedImage(imageUrl) {
+                    if (!imageUrl) {
+                        throw new Error('未能获取生成的图片 URL');
+                    }
+                    
+                    generatedImageContainer.innerHTML = `
+                        <div class="generated-image-wrapper">
+                            <img src="${imageUrl}" alt="生成的图片" id="generatedImage">
+                            <button class="download-image-btn" id="downloadImageBtn">点击下载图片</button>
+                        </div>
+                    `;
+                    
+                    // 绑定下载按钮事件
+                    document.getElementById('downloadImageBtn').addEventListener('click', function() {
+                        const link = document.createElement('a');
+                        link.href = imageUrl;
+                        link.download = '生成图片_' + new Date().getTime() + '.jpg';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    });
+                }
+            });
+            
+            // 联系按钮与浮层
+            const contactBtn = document.getElementById('contactBtn');
+            const contactTooltip = document.getElementById('contactTooltip');
+            
+            contactBtn.addEventListener('click', function() {
+                contactTooltip.classList.toggle('show');
+            });
+            
+            // 点击其他地方关闭浮层
+            document.addEventListener('click', function(e) {
+                if (!contactBtn.contains(e.target) && !contactTooltip.contains(e.target)) {
+                    contactTooltip.classList.remove('show');
+                }
+            });
+            
+            // 获取卡片的标签
+            function getTagsForCard(cardId) {
+                const card = document.querySelector(`.image-card[data-id="${cardId}"]`);
+                if (card) {
+                    return Array.from(card.querySelectorAll('.image-tag')).map(tag => tag.textContent);
+                }
+                return [];
+            }
+            
+            // 移动端检测与适配
+            function checkMobile() {
+                return window.innerWidth <= 768;
+            }
+            
+            // 移动端适配初始化
+            function initMobileAdaptation() {
+                const isMobile = checkMobile();
+                
+                // 如果是移动端，进行额外的适配
+                if (isMobile) {
+                    // 移动端下滑动时隐藏底部按钮
+                    const mainContent = document.querySelector('.main-content');
+                    const contactBtn = document.getElementById('contactBtn');
+                    let lastScrollTop = 0;
+                    
+                    mainContent.addEventListener('scroll', function() {
+                        const st = this.scrollTop;
+                        if (st > lastScrollTop && st > 100) {
+                            // 向下滑动，隐藏按钮
+                            contactBtn.style.transform = 'translateY(80px)';
+                        } else {
+                            // 向上滑动，显示按钮
+                            contactBtn.style.transform = 'translateY(0)';
+                        }
+                        lastScrollTop = st;
+                    });
+                }
+            }
+            
+            // 在页面加载完成后初始化移动端适配
+            window.addEventListener('load', initMobileAdaptation);
+            
+            // 在窗口大小改变时重新检测
+            window.addEventListener('resize', initMobileAdaptation);
+            
+            // 登录/注册弹窗交互
+            const loginBtn = document.getElementById('loginBtn');
+            const loginModal = document.getElementById('loginModal');
+            const loginModalClose = document.querySelector('.login-modal-close');
+            const loginTabs = document.querySelectorAll('.login-tab');
+            const loginForms = document.querySelectorAll('.login-form');
+            
+            // 打开登录弹窗
+            loginBtn.addEventListener('click', () => {
+                loginModal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            // 关闭登录弹窗
+            loginModalClose.addEventListener('click', () => {
+                loginModal.classList.remove('open');
+                document.body.style.overflow = '';
+            });
+            
+            // 点击蒙层关闭弹窗
+            loginModal.addEventListener('click', (e) => {
+                if (e.target === loginModal) {
+                    loginModal.classList.remove('open');
+                    document.body.style.overflow = '';
+                }
+            });
+            
+            // 切换登录/注册表单
+            loginTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 更新标签状态
+                    loginTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // 更新表单显示
+                    const tabName = tab.dataset.tab;
+                    loginForms.forEach(form => form.classList.remove('active'));
+                    
+                    if (tabName === 'login') {
+                        document.getElementById('loginForm').classList.add('active');
+                        document.getElementById('loginModalTitle').textContent = '登录';
+                    } else {
+                        document.getElementById('registerForm').classList.add('active');
+                        document.getElementById('loginModalTitle').textContent = '注册';
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <!-- 引入 Coze 工作流相关文件 -->
+    <script src="coze-client.js"></script>
+</body>
+</html>

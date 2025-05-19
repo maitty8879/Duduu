@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coze API 测试 (Fixed)</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+        #userInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #0078d7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #006cc1;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .response-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #responseText {
+            min-height: 200px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+        .status {
+            color: #666;
+            font-size: 14px;
+            text-align: right;
+        }
+        .image-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        .image-container img {
+            max-width: 100%;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .tag {
+            background-color: #e0f2ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #0078d7;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 120, 215, 0.3);
+            border-radius: 50%;
+            border-top-color: #0078d7;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Coze API 流式测试（修复版）</h1>
+    <div class="chat-container">
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="输入你的问题..." value="画一只可爱的猫咪" />
+            <button id="sendButton" onclick="sendMessage()">发送</button>
+        </div>
+        <div class="response-area">
+            <div id="responseText"></div>
+            <div id="imageContainer" class="image-container"></div>
+            <div id="tagsContainer" class="tags-container"></div>
+            <div id="status" class="status"></div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        const responseText = document.getElementById('responseText');
+        const imageContainer = document.getElementById('imageContainer');
+        const tagsContainer = document.getElementById('tagsContainer');
+        const statusEl = document.getElementById('status');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // 按Enter键发送消息
+        userInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // 清理事件监听器和关闭连接
+        function cleanup() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+        }
+
+        // 发送消息
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message === '') return;
+
+            // 禁用输入和按钮
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            sendButton.innerHTML = '发送中 <span class="loading"></span>';
+
+            // 清空之前的响应
+            responseText.textContent = '';
+            imageContainer.innerHTML = '';
+            tagsContainer.innerHTML = '';
+            statusEl.textContent = '发送请求中...';
+
+            // 创建一个随机用户ID，实际应用中应使用持久化的用户ID
+            const userId = 'user_' + Date.now();
+
+            // 首先建立EventSource连接
+            const streamUrl = `/api/coze/chat/stream?userId=${encodeURIComponent(userId)}`;
+            
+            // 清理之前的连接
+            cleanup();
+            
+            // 创建新的EventSource连接
+            eventSource = new EventSource(streamUrl);
+            
+            // 处理连接打开
+            eventSource.onopen = function() {
+                statusEl.textContent = '连接已建立，等待响应...';
+                
+                // 连接建立后，发送POST请求触发处理
+                setTimeout(() => {
+                    fetch('/api/coze/chat/stream', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            content: message,
+                            userId: userId
+                        })
+                    }).catch(error => {
+                        console.error('请求失败:', error);
+                        statusEl.textContent = `错误: ${error.message || '请求失败'}`;
+                        
+                        userInput.disabled = false;
+                        sendButton.disabled = false;
+                        sendButton.innerHTML = '发送';
+                        
+                        cleanup();
+                    });
+                }, 100);
+            };
+            
+            // 处理各种事件
+            eventSource.addEventListener('start', function(event) {
+                const data = JSON.parse(event.data);
+                statusEl.textContent = data.message || '开始处理...';
+            });
+
+            eventSource.addEventListener('delta', function(event) {
+                const data = JSON.parse(event.data);
+                
+                // 从结构化数据中提取内容
+                const content = data.content || '';
+                
+                // 将内容添加到响应文本区域
+                responseText.textContent += content;
+                
+                // 更新状态显示事件类型
+                if (data.eventType) {
+                    statusEl.textContent = `接收中... (${data.eventType})`;
+                } else {
+                    statusEl.textContent = '接收中...';
+                }
+                
+                // 如果包含原始数据，可以在控制台中查看
+                if (data.raw) {
+                    console.log('原始消息数据:', data.raw);
+                }
+            });
+
+            eventSource.addEventListener('image', function(event) {
+                const data = JSON.parse(event.data);
+                if (data.imageUrl) {
+                    imageContainer.innerHTML = `<img src="${data.imageUrl}" alt="生成的图片" />`;
+                }
+            });
+
+            eventSource.addEventListener('tags', function(event) {
+                const data = JSON.parse(event.data);
+                if (data.tags && Array.isArray(data.tags)) {
+                    tagsContainer.innerHTML = '';
+                    data.tags.forEach(tag => {
+                        const tagEl = document.createElement('span');
+                        tagEl.className = 'tag';
+                        tagEl.textContent = tag;
+                        tagsContainer.appendChild(tagEl);
+                    });
+                }
+            });
+
+            eventSource.addEventListener('done', function(event) {
+                const data = JSON.parse(event.data);
+                statusEl.textContent = data.message || '聊天流结束';
+            });
+
+            eventSource.addEventListener('complete', function(event) {
+                const data = JSON.parse(event.data);
+                
+                // 显示完整的最终内容（如果之前的delta事件没有完全构建）
+                if (data.finalContent && data.finalContent !== responseText.textContent) {
+                    responseText.textContent = data.finalContent;
+                }
+                
+                // 显示状态信息
+                if (data.status) {
+                    statusEl.textContent = `完成 (${data.status})`;
+                } else {
+                    statusEl.textContent = '完成';
+                }
+                
+                // 如果有提取的数据但尚未显示
+                if (data.extractedData) {
+                    // 显示图片
+                    if (data.extractedData.imageUrl && imageContainer.innerHTML === '') {
+                        imageContainer.innerHTML = `<img src="${data.extractedData.imageUrl}" alt="生成的图片" />`;
+                    }
+                    
+                    // 显示标签
+                    if (data.extractedData.tags && data.extractedData.tags.length > 0 && tagsContainer.innerHTML === '') {
+                        tagsContainer.innerHTML = '';
+                        data.extractedData.tags.forEach(tag => {
+                            const tagEl = document.createElement('span');
+                            tagEl.className = 'tag';
+                            tagEl.textContent = tag;
+                            tagsContainer.appendChild(tagEl);
+                        });
+                    }
+                }
+                
+                // 重新启用输入和按钮
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                sendButton.innerHTML = '发送';
+                userInput.focus();
+                
+                // 关闭连接
+                cleanup();
+            });
+
+            // 处理错误
+            eventSource.onerror = function(event) {
+                console.error('SSE连接错误:', event);
+                statusEl.textContent = '连接错误或中断';
+                
+                // 重新启用输入和按钮
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                sendButton.innerHTML = '发送';
+                
+                // 关闭连接
+                cleanup();
+            };
+        }
+    </script>
+</body>
+</html> 
